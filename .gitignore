@@ -1,0 +1,66 @@
+# OSX
+#
+.DS_Store
+
+# Xcode
+#
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+project.xcworkspace
+ios/Export/
+*.dSYM.zip
+ios/Pods
+
+# Android/IJ
+#
+*.iml
+.idea
+.gradle
+local.properties
+
+# node.js
+#
+.nvm/
+node_modules/
+npm-debug.log
+
+# BUCK
+buck-out/
+\.buckd/
+android/app/libs
+android/keystores/debug.keystore
+
+# relax
+iconfont.ttf
+./**/iconfont.ttf
+**/main.jsbundle
+**/main.jsbundle.meta
+*/code_push*
+
+.bundle
+.irb-history
+
+pubnub.log
+
+ci-scripts/tenant-config*
+ci-scripts/before-install.sh.done.marker
+
+# Carthage
+Carthage/
+
+# Calabash screenshots
+Calabash/*.png
