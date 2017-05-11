@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Dimensions, LayoutAnimation, UIManager, Platform } from 'react-native';
+import { View, Dimensions } from 'react-native';
 import Animations from '../Utils/Animations';
 
 const {
@@ -7,10 +7,6 @@ const {
   Fade: FADE,
   None: NONE,
 } = Animations.Modal;
-
-const _Modal = () => null;
-_Modal.displayName = 'Modal';
-export default _Modal;
 
 export const {
   width: WINDOW_WIDTH,
@@ -56,16 +52,6 @@ const getAnimatedValue = (type, value) => {
 
 const MODAL_ANIMATIONS = {
   [FADE]: {
-    duration: 200,
-    create: {
-      type: LayoutAnimation.Types.linear,
-      property: LayoutAnimation.Properties.opacity,
-    },
-    update: {
-      type: LayoutAnimation.Types.spring,
-    },
-  },
-  [SLIDE]: {
     duration: 500,
     create: {
       type: LayoutAnimation.Types.spring,
@@ -88,38 +74,34 @@ class ModalContainer extends Component {
     animation: 0,
   };
 
-  componentWillMount() {
-    if (Platform.OS === 'android') {
-      UIManager.setLayoutAnimationEnabledExperimental(true);
-    }
-  }
-
   componentDidMount() {
-    if (this.props.transition === SLIDE) {
-      setTimeout(() => {
-        this.animate();
-      }, 16);
-    }
-
-    if (this.props.transition === FADE) {
-      LayoutAnimation.configureNext(MODAL_ANIMATIONS[SLIDE]);
+    if (this.props.transition !== NONE) {
+      LayoutAnimation.configureNext(MODAL_ANIMATIONS[FADE]);
     }
   }
 
   animate = (show = true) => new Promise((resolve) => {
     if (this.props.transition !== SLIDE) {
-      LayoutAnimation.configureNext(MODAL_ANIMATIONS[SLIDE]);
+      LayoutAnimation.configureNext(MODAL_ANIMATIONS[FADE]);
       resolve();
       return;
     }
 
+    LayoutAnimation.configureNext(MODAL_ANIMATIONS[FADE], resolve);
     this.setState({ animation: show ? WINDOW_HEIGHT : 0 });
-    LayoutAnimation.configureNext(MODAL_ANIMATIONS[SLIDE], resolve);
   });
 
   render() {
     return (
-      <View style={s.root} key={`contianer-${this.props.name}`}>
+      <View style={s.root}
+        key={`contianer-${this.props.name}`}
+        onLayout={() => {
+          if (!this.visible && this.props.transition === SLIDE) {
+            this.visible = true;
+            this.animate();
+          }
+        }}
+      >
         <View
           key={`root-${this.props.name}`}
           style={[s.wrapper, getAnimatedValue(this.props.transition, this.state.animation)]}

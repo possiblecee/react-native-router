@@ -1,6 +1,6 @@
 import Router from './Containers/Router';
-import Route from './Containers/Route';
-import Modal from './Containers/Modal';
+import Route from './Components/Route';
+import Modal from './Components/Modal';
 import Animations from './Utils/Animations';
 import routerReducer from './Redux/reducer';
 import { navigateTo, navigateBack, closeOverlay } from './Redux/actions';
