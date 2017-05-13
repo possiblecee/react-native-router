@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import { View, Dimensions } from 'react-native';
+import { View, Dimensions, LayoutAnimation } from 'react-native';
 import Animations from '../Utils/Animations';
+import { get } from 'lodash';
 
 const {
   Slide: SLIDE,
@@ -31,10 +32,17 @@ const s = {
     backgroundColor: 'transparent',
     justifyContent: 'flex-start',
   },
-  contianer: {
+  container: {
     width: WINDOW_WIDTH,
     height: WINDOW_HEIGHT,
     backgroundColor: 'transparent',
+  },
+  backgroundComponent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   innerContainer: {
     alignSelf: 'stretch',
@@ -80,6 +88,22 @@ class ModalContainer extends Component {
     }
   }
 
+  getBackgorundComponent() {
+    const backgroundComponent =
+    get(this.props, 'params.backgroundComponent', get(this.props, 'backgroundComponent'));
+
+    if (backgroundComponent) {
+      return (
+        <View
+          style={s.backgroundComponent}
+          children={React.createElement(backgroundComponent)}
+        />
+      );
+    }
+
+    return null;
+  }
+
   animate = (show = true) => new Promise((resolve) => {
     if (this.props.transition !== SLIDE) {
       LayoutAnimation.configureNext(MODAL_ANIMATIONS[FADE]);
@@ -94,7 +118,7 @@ class ModalContainer extends Component {
   render() {
     return (
       <View style={s.root}
-        key={`contianer-${this.props.name}`}
+        key={`container-${this.props.name}`}
         onLayout={() => {
           if (!this.visible && this.props.transition === SLIDE) {
             this.visible = true;
@@ -106,7 +130,8 @@ class ModalContainer extends Component {
           key={`root-${this.props.name}`}
           style={[s.wrapper, getAnimatedValue(this.props.transition, this.state.animation)]}
         >
-          <View style={[s.contianer, { justifyContent: this.props.justifyContent }]}>
+          {this.getBackgorundComponent()}
+          <View style={[s.container, { justifyContent: this.props.justifyContent }]}>
             <View style={[s.innerContainer, this.props.style]}>
               {this.props.children}
             </View>
@@ -119,6 +144,7 @@ class ModalContainer extends Component {
 
 ModalContainer.defaultProps = {
   height: WINDOW_WIDTH,
+  justifyContent: 'center',
 };
 
 ModalContainer.propTypes = {

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { View, Dimensions, Animated } from 'react-native';
 import Animations from '../Utils/Animations';
+import { get } from 'lodash';
 
 const {
   Slide: SLIDE,
@@ -31,10 +32,17 @@ const s = {
     backgroundColor: 'transparent',
     justifyContent: 'flex-start',
   },
-  contianer: {
+  container: {
     width: WINDOW_WIDTH,
     height: WINDOW_HEIGHT,
     backgroundColor: 'transparent',
+  },
+  backgroundComponent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   innerContainer: {
     alignSelf: 'stretch',
@@ -72,6 +80,22 @@ class ModalContainer extends Component {
     return show ? 1 : 0;
   }
 
+  getBackgorundComponent() {
+    const backgroundComponent =
+    get(this.props, 'params.backgroundComponent', get(this.props, 'backgroundComponent'));
+
+    if (backgroundComponent) {
+      return (
+        <View
+          style={s.backgroundComponent}
+          children={React.createElement(backgroundComponent)}
+        />
+      );
+    }
+
+    return null;
+  }
+
   animate = (show = true) => new Promise((resolve) => {
     Animated.timing(this.state.animation, {
       toValue: this.getTarget(show),
@@ -81,12 +105,13 @@ class ModalContainer extends Component {
 
   render() {
     return (
-      <View style={s.root} key={`contianer-${this.props.name}`}>
+      <View style={s.root} key={`container-${this.props.name}`}>
         <Animated.View
           key={`root-${this.props.name}`}
           style={[s.wrapper, getAnimatedValue(this.props.transition, this.state.animation)]}
         >
-          <View style={[s.contianer, { justifyContent: this.props.justifyContent }]}>
+          <View style={[s.container, { justifyContent: this.props.justifyContent }]}>
+            {this.getBackgorundComponent()}
             <View style={[s.innerContainer, this.props.style]}>
               {this.props.children}
             </View>
@@ -99,6 +124,7 @@ class ModalContainer extends Component {
 
 ModalContainer.defaultProps = {
   height: WINDOW_WIDTH,
+  justifyContent: 'center',
 };
 
 ModalContainer.propTypes = {

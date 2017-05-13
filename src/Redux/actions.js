@@ -9,12 +9,15 @@ export const SELECT = 'APP/ROUTER/SELECT';
 
 const filterParam = (_data = {}) => {
   let data = { ..._data };
-  if (typeof(data) !== 'object') {
+
+  if (typeof data !== 'object') {
     return data;
   }
+
   if (!data) {
     return;
   }
+
   const proto = (data || {}).constructor.name;
   // avoid passing React Native parameters
   if (proto !== 'Object') {
