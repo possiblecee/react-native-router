@@ -120,6 +120,12 @@ class Router extends Component {
   onChange(page) {
     const route = this.findRoute(page.currentRoute);
 
+    if (!route) {
+      // eslint-disable-next-line no-console
+      console.error(`[react-native-router] No route is defined for name: ${page.currentRoute}`);
+      return;
+    }
+
     // check if route is popup
     if (route.type === 'modal' && page.mode !== DISMISS) {
       this.createModal(page, route);
@@ -162,12 +168,6 @@ class Router extends Component {
     }
 
     if (page.mode === PUSH || page.mode === REPLACE) {
-      if (!route) {
-        // eslint-disable-next-line no-console
-        console.error(`[react-native-router] No route is defined for name: ${page.currentRoute}`);
-        return;
-      }
-
       if (page.mode === REPLACE) {
         this.refs.nav.replace(this.getRoute(route, page.data));
       } else {
@@ -186,7 +186,7 @@ class Router extends Component {
 
     if (page.mode === RESET) {
       // reset navigation stack
-      this.refs.nav.immediatelyResetRouteStack([this.getRoute(this.routes[page.initial], {})]);
+      this.refs.nav.immediatelyResetRouteStack([this.getRoute(this.routes[page.initial], page.data)]);
     }
   }
 
