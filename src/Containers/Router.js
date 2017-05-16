@@ -49,15 +49,17 @@ const createItem = (child, parent) => {
   };
 };
 
-const createParent = (child) => ({
-  props: {
-    ...omit(child.props, ['children']),
-    component: child.props.component ? React.createFactory(child.props.component) : null,
-    type: child.type.displayName.toLowerCase(),
-  },
-  path: child.props.path || undefined,
-  name: `parent-${++paretnCounter}`,
-});
+const createParent = (child) => {
+  return ({
+    props: {
+      ...omit(child.props, ['children']),
+      component: child.props.component ? React.createFactory(child.props.component) : null,
+      type: child.type.displayName.toLowerCase(),
+    },
+    path: child.props.path || undefined,
+    name: `parent-${++paretnCounter}`,
+  });
+};
 
 const reduceItem = (a, b, prular, singular) => ({
   ...a[prular],
@@ -196,8 +198,11 @@ class Router extends Component {
       console.error(`No route for data: ${JSON.stringify(data)}`);
     }
 
+
     const parent = this.parents[route.parent] || {};
-    const sceneConfig = route.sceneConfig || parent.sceneConfig || Animations.FlatFloatFromRight;
+
+    const sceneConfig = get(route, 'params.transition') || parent.transition
+    || Animations.FlatFloatFromRight;
     const props = { ...route, ...data };
 
     return {

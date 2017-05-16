@@ -71,6 +71,7 @@ var None = {
 };
 
 module.exports = {
+  ...Navigator.SceneConfigs,
   FlatFloatFromRight,
   FlatFloatFromBottom,
   None,
