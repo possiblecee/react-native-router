@@ -4,7 +4,7 @@ import { PUSH, REPLACE, POP, DISMISS, RESET, CoreActions } from '../Redux/action
 import Animations from '../Utils/Animations';
 import { connect } from 'react-redux';
 import pathToRegexp from 'path-to-regexp';
-import { values, omit, get, difference } from 'lodash';
+import { values, omit, get, difference, set } from 'lodash';
 import { ModalContainer } from './Modal';
 
 let paretnCounter = 0;
@@ -34,6 +34,7 @@ const filterChildren = (children) => children.filter((child) => (
 
 const createItem = (child, parent) => {
   const name = `${parent && parent.path ? `${parent.path}/` : ''}${child.props.path}`;
+
   return {
     props: {
       name,
@@ -49,16 +50,26 @@ const createItem = (child, parent) => {
   };
 };
 
-const createParent = (child) => {
-  return ({
-    props: {
-      ...omit(child.props, ['children']),
-      component: child.props.component ? React.createFactory(child.props.component) : null,
-      type: child.type.displayName.toLowerCase(),
-    },
-    path: child.props.path || undefined,
-    name: `parent-${++paretnCounter}`,
-  });
+const creaateParentItem = (child) => ({
+  props: {
+    ...omit(child.props, ['children']),
+    component: child.props.component || null,
+    type: child.type.displayName.toLowerCase(),
+  },
+  path: child.props.path || undefined,
+  name: `parent-${++paretnCounter}`,
+});
+
+const recursiveGetChildrenPath = (parent, path) => (
+  get(path, path) ? recursiveGetChildrenPath(parent, `${path}.props.children`) : path
+);
+
+const createParent = (parent, child) => {
+  if (!parent) {
+    return creaateParentItem(child);
+  }
+
+  return set(parent, recursiveGetChildrenPath(parent, 'props.children'), creaateParentItem(child));
 };
 
 const reduceItem = (a, b, prular, singular) => ({
@@ -66,6 +77,7 @@ const reduceItem = (a, b, prular, singular) => ({
   ...b[prular] || {},
   ...(b[singular] ? { [b[singular].name]: b[singular].props } : {}),
 });
+
 
 /**
  * This method is used to generate router tree
@@ -76,7 +88,7 @@ const reduceItem = (a, b, prular, singular) => ({
 const processChildren = (children, parent) => (
   filterChildren(React.Children.toArray(children)).map((child) => {
     if (child.props.children) {
-      return processChildren(child.props.children, createParent(child));
+      return processChildren(child.props.children, createParent(parent, child));
     }
 
     return {
@@ -89,6 +101,28 @@ const processChildren = (children, parent) => (
     parents: reduceItem(a, b, 'parents', 'parent'),
   }), {})
 );
+
+const getParentComponent = (parent) => parent.props.component;
+
+const recursiveGetChildren = (current, lastChildren, path) => {
+  const childPath = `${path ? `${path}.` : ''}props.children`;
+  const children = get(current, childPath);
+
+  return React.createElement(getParentComponent(current), {
+    ...current.props,
+  }, children || lastChildren);
+};
+
+const recursiveRender = ({ parent = {}, component }) => {
+  if (parent.children) {
+    return (props = {}) => {
+      const el = React.createElement(component, props);
+      return recursiveGetChildren(parent.children, el);
+    };
+  }
+
+  return component;
+};
 
 class Router extends Component {
   state = {
@@ -214,14 +248,17 @@ class Router extends Component {
       },
       navigationBar: get(props.params, 'navigationBar', () => ({}))(props),
       children: (
-        parent.component ? parent.component({ ...parent.componentProps }) : undefined
+        parent.component ?
+        React.createElement(parent.component, { ...parent.componentProps }) :
+        undefined
       ),
+      parent,
       passProps: props,
     };
   }
 
   getSchene = (route) => {
-    const RenderComponent = route.component;
+    const RenderComponent = recursiveRender(route);
     return (
       <View style={s.transparent}>
         <RenderComponent
@@ -243,7 +280,7 @@ class Router extends Component {
               ref={(e) => { this.modals[modal.name] = e; }}
               {...modal}
               key={modal.name}
-              children={React.Children.toArray([modal.component, this.props.navigationBar(modal)])}
+              children={React.Children.toArray([recursiveRender(modal)(modal.passProps), this.props.navigationBar(modal)])}
             />
           ))
         )}
@@ -257,21 +294,22 @@ class Router extends Component {
     const modals = [...this.state.modals];
     const parent = this.parents[route.parent];
     const isReset = page.mode === RESET || page.mode === REPLACE;
-    const component = React.createElement(route.component, {
-      ...route,
-      ...page.data,
-      paddingTop: get(route.params, 'navigationBar.height', 0),
-    });
 
     const modal = {
       ...parent.passProps || {},
       ...route.params || {},
-      component,
+      component: route.component,
+      passProps: {
+        ...route,
+        ...page.data,
+        paddingTop: get(route.params, 'navigationBar.height', 0),
+      },
       transition: (
         isReset ? Animations.Modal.None :
         get(parent, 'passProps.transition', Animations.Modal.None)
       ),
       name: route.name,
+      parent,
     };
 
     if (!isReset || !modals.length) {
@@ -344,8 +382,8 @@ Router.propTypes = {
   init: React.PropTypes.func,
   navigationBar: React.PropTypes.func,
   routes: React.PropTypes.array,
+  navigateBack: React.PropTypes.func,
 };
-
 
 const mapDispatchToProps = (dispatch) => ({
   init: (props) => dispatch(CoreActions.init(props)),
