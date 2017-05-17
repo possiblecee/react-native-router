@@ -132,7 +132,7 @@ ModalContainer.propTypes = {
   transition: React.PropTypes.oneOf([SLIDE, FADE, NONE]),
   justifyContent: React.PropTypes.string,
   style: View.propTypes.style,
-  name: View.propTypes.style,
+  name: React.PropTypes.string,
 };
 
 export { ModalContainer };

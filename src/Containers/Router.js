@@ -33,7 +33,8 @@ const filterChildren = (children) => children.filter((child) => (
 ));
 
 const createItem = (child, parent) => {
-  const name = `${parent && parent.path ? `${parent.path}/` : ''}${child.props.path}`;
+  const name = `${parent && parent.path ? `${parent.path}/` : ''}${child.props.path}`
+  .replace(/\/+/g, '/');
 
   return {
     props: {
@@ -50,13 +51,13 @@ const createItem = (child, parent) => {
   };
 };
 
-const creaateParentItem = (child) => ({
+const createParentItem = (child) => ({
   props: {
     ...omit(child.props, ['children']),
     component: child.props.component || null,
     type: child.type.displayName.toLowerCase(),
   },
-  path: child.props.path || undefined,
+  path: child.props.path,
   name: `parent-${++paretnCounter}`,
 });
 
@@ -65,11 +66,18 @@ const recursiveGetChildrenPath = (parent, path) => (
 );
 
 const createParent = (parent, child) => {
+  const currentParent = createParentItem(child);
+
   if (!parent) {
-    return creaateParentItem(child);
+    return currentParent;
   }
 
-  return set(parent, recursiveGetChildrenPath(parent, 'props.children'), creaateParentItem(child));
+  const _parent = set(parent, recursiveGetChildrenPath(parent, 'props.children'), currentParent);
+  if (currentParent.path) {
+    _parent.path = `${parent.path ? `${parent.path}/` : ''}${currentParent.path}`;
+  }
+
+  return _parent;
 };
 
 const reduceItem = (a, b, prular, singular) => ({
