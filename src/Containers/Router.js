@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { View, StatusBar, Navigator } from 'react-native';
-import { PUSH, REPLACE, POP, DISMISS, RESET, CoreActions } from '../Redux/actions';
+import { PUSH, REPLACE, POP, DISMISS, RESET, CoreActions, closeOverlay } from '../Redux/actions';
 import Animations from '../Utils/Animations';
 import { connect } from 'react-redux';
 import pathToRegexp from 'path-to-regexp';
-import { values, omit, get, difference, set } from 'lodash';
+import { values, omit, get, difference, set, pick } from 'lodash';
 import { ModalContainer } from './Modal';
 
 let paretnCounter = 0;
@@ -61,7 +61,7 @@ const creaateParentItem = (child) => ({
 });
 
 const recursiveGetChildrenPath = (parent, path) => (
-  get(path, path) ? recursiveGetChildrenPath(parent, `${path}.props.children`) : path
+  get(parent, path) ? recursiveGetChildrenPath(parent, `${path}.props.children`) : path
 );
 
 const createParent = (parent, child) => {
@@ -104,24 +104,50 @@ const processChildren = (children, parent) => (
 
 const getParentComponent = (parent) => parent.props.component;
 
+const mergeProps = (element, props = {}) => ({
+  ...element,
+  props: {
+    ...element.props,
+    ...pick(props, ['name', 'close']),
+  },
+});
+
 const recursiveGetChildren = (current, lastChildren, path) => {
   const childPath = `${path ? `${path}.` : ''}props.children`;
   const children = get(current, childPath);
+  const renderComponent = getParentComponent(current);
 
-  return React.createElement(getParentComponent(current), {
-    ...current.props,
-  }, children || lastChildren);
-};
-
-const recursiveRender = ({ parent = {}, component }) => {
-  if (parent.children) {
-    return (props = {}) => {
-      const el = React.createElement(component, props);
-      return recursiveGetChildren(parent.children, el);
-    };
+  if (!renderComponent && children) {
+    return recursiveGetChildren(mergeProps(children, current.props), lastChildren, path);
   }
 
-  return component;
+  if (!renderComponent && !children) {
+    return lastChildren;
+  }
+
+  return React.createElement(renderComponent, {
+    ...current.props,
+  }, (
+    children ?
+      recursiveGetChildren(mergeProps(children, current.props), lastChildren, childPath) :
+      lastChildren
+  ));
+};
+
+const recursiveRender = ({ parent = {}, component, passProps }) => (props) => {
+  const el = React.createElement(component, {
+    ...props,
+    key: passProps.name,
+  });
+
+  const _parent = {
+    ...parent,
+    props: {
+      ...parent,
+    },
+  };
+
+  return recursiveGetChildren(mergeProps(_parent, passProps), el);
 };
 
 class Router extends Component {
@@ -222,7 +248,9 @@ class Router extends Component {
 
     if (page.mode === RESET) {
       // reset navigation stack
-      this.refs.nav.immediatelyResetRouteStack([this.getRoute(this.routes[page.initial], page.data)]);
+      this.refs.nav.immediatelyResetRouteStack([
+        this.getRoute(this.routes[page.initial], page.data),
+      ]);
     }
   }
 
@@ -247,46 +275,38 @@ class Router extends Component {
         ...sceneConfig,
       },
       navigationBar: get(props.params, 'navigationBar', () => ({}))(props),
-      children: (
-        parent.component ?
-        React.createElement(parent.component, { ...parent.componentProps }) :
-        undefined
-      ),
       parent,
       passProps: props,
     };
   }
 
-  getSchene = (route) => {
-    const RenderComponent = recursiveRender(route);
-    return (
-      <View style={s.transparent}>
-        <RenderComponent
-          key={route.name}
-          route={route}
-          paddingTop={get(route, 'navigationBar.height', 0)}
-          {...route.passProps}
-          routes={this.routerActions}
-        />
-        {this.props.navigationBar(route)}
-        {!!route.children && (
-          React.cloneElement(route.children, {
-            route,
-          })
-        )}
-        {!!this.state.modals.length && (
-          this.state.modals.map((modal) => (
-            <ModalContainer
-              ref={(e) => { this.modals[modal.name] = e; }}
-              {...modal}
-              key={modal.name}
-              children={React.Children.toArray([recursiveRender(modal)(modal.passProps), this.props.navigationBar(modal)])}
-            />
-          ))
-        )}
-      </View>
-    );
-  };
+  getSchene = (route) => (
+    <View style={s.transparent}>
+      {recursiveRender(route)({
+        key: route.name,
+        route,
+        paddingTop: get(route, 'navigationBar.height', 0),
+        ...route.passProps,
+        routes: this.routerActions,
+      })}
+      {this.props.navigationBar(route)}
+      {!!this.state.modals.length && (
+        this.state.modals.map((modal) => (
+          <ModalContainer
+            ref={(e) => { this.modals[modal.name] = e; }}
+            {...modal}
+            key={modal.name}
+            children={
+              React.Children.toArray([
+                recursiveRender(modal)(modal.passProps),
+                this.props.navigationBar(modal),
+              ])
+            }
+          />
+        ))
+      )}
+    </View>
+  );
 
   modals = {};
 
@@ -303,6 +323,7 @@ class Router extends Component {
         ...route,
         ...page.data,
         paddingTop: get(route.params, 'navigationBar.height', 0),
+        close: () => this.props.closeOverlay(route.name),
       },
       transition: (
         isReset ? Animations.Modal.None :
@@ -382,11 +403,12 @@ Router.propTypes = {
   init: React.PropTypes.func,
   navigationBar: React.PropTypes.func,
   routes: React.PropTypes.array,
-  navigateBack: React.PropTypes.func,
+  closeOverlay: React.PropTypes.func,
 };
 
 const mapDispatchToProps = (dispatch) => ({
   init: (props) => dispatch(CoreActions.init(props)),
+  closeOverlay: (props) => dispatch(closeOverlay(props)),
 });
 
 const mapStateToProps = (state, ownProps) => ({
