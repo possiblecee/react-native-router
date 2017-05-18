@@ -171,14 +171,14 @@ class Router extends Component {
 
     this.routes = routes;
     this.parents = parents;
-    this.initialRoute = this.routes[this.props.initialPath];
+    this.initialRoute = this.findRoute(this.props.initialPath);
 
     if (!this.initialRoute) {
       // eslint-disable-next-line no-console
-      console.error('[react-native-router] no initial route defined <Router initialRoute="/">');
+      console.error('[react-native-router] no initial route defined <Router initialPath="/">');
     }
 
-    this.props.init(this.props.initialPath);
+    this.props.init(this.initialRoute.name);
   }
 
   componentWillReceiveProps(props) {
