@@ -4,7 +4,7 @@ import { PUSH, REPLACE, POP, DISMISS, RESET, CoreActions, closeOverlay } from '.
 import Animations from '../Utils/Animations';
 import { connect } from 'react-redux';
 import pathToRegexp from 'path-to-regexp';
-import { values, omit, get, difference, set, pick } from 'lodash';
+import { values, omit, get, difference, set } from 'lodash';
 import { ModalContainer } from './Modal';
 
 let paretnCounter = 0;
@@ -115,8 +115,8 @@ const getParentComponent = (parent) => parent.props.component;
 const mergeProps = (element, props = {}) => ({
   ...element,
   props: {
+    ...omit(props, ['children', 'component']),
     ...element.props,
-    ...pick(props, ['name', 'close']),
   },
 });
 
