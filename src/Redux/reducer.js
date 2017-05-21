@@ -36,8 +36,8 @@ export default function reducer(state = { routes: [], currentRoute: null }, acti
         currentRoute: state.routes[state.routes.length - num - 1],
       };
     case DISMISS:
-      if (state.routes.length <= 1) {
-        throw new Error("Number of routes should be greater than 1");
+      if (state.routes.length === 1) {
+        return state;
       }
 
       if (!action.name) {
