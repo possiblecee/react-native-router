@@ -337,6 +337,7 @@ class Router extends Component {
         isReset ? Animations.Modal.None :
         get(parent, 'passProps.transition', Animations.Modal.None)
       ),
+      navigationBar: get(route.params, 'navigationBar', () => ({}))(route),
       name: route.name,
       parent,
     };
