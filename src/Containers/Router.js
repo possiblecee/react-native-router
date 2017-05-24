@@ -257,7 +257,7 @@ class Router extends Component {
     if (page.mode === RESET) {
       // reset navigation stack
       this.refs.nav.immediatelyResetRouteStack([
-        this.getRoute(this.routes[page.initial], page.data),
+        this.getRoute(route, page.data),
       ]);
     }
   }
