@@ -298,21 +298,6 @@ class Router extends Component {
         routes: this.routerActions,
       })}
       {this.props.navigationBar(route)}
-      {!!this.state.modals.length && (
-        this.state.modals.map((modal) => (
-          <ModalContainer
-            ref={(e) => { this.modals[modal.name] = e; }}
-            {...modal}
-            key={modal.name}
-            children={
-              React.Children.toArray([
-                recursiveRender(modal)(modal.passProps),
-                this.props.navigationBar(modal),
-              ])
-            }
-          />
-        ))
-      )}
     </View>
   );
 
@@ -387,14 +372,31 @@ class Router extends Component {
     return (
       <View style={s.transparent}>
         <StatusBar {...this.props.defaultStatusBar} />
-        <Navigator
-          renderScene={(route) => (
-            this.getSchene(route)
-          )}
-          configureScene={(route) => route.sceneConfig}
-          ref="nav"
-          initialRoute={this.getRoute(this.initialRoute)}
-        />
+        <View style={s.transparent} ref={this.props.rootRef}>
+          <Navigator
+            renderScene={(route) => (
+              this.getSchene(route)
+            )}
+            configureScene={(route) => route.sceneConfig}
+            ref="nav"
+            initialRoute={this.getRoute(this.initialRoute)}
+          />
+        </View>
+        {!!this.state.modals.length && (
+          this.state.modals.map((modal) => (
+            <ModalContainer
+              ref={(e) => { this.modals[modal.name] = e; }}
+              {...modal}
+              key={modal.name}
+              children={
+                React.Children.toArray([
+                  recursiveRender(modal)(modal.passProps),
+                  this.props.navigationBar(modal),
+                ])
+              }
+            />
+          ))
+        )}
       </View>
     );
   }
@@ -413,6 +415,7 @@ Router.propTypes = {
   navigationBar: React.PropTypes.func,
   routes: React.PropTypes.array,
   closeOverlay: React.PropTypes.func,
+  rootRef: React.PropTypes.func,
 };
 
 const mapDispatchToProps = (dispatch) => ({
