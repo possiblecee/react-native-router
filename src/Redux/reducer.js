@@ -26,9 +26,9 @@ export default function reducer(state = { routes: [], currentRoute: null }, acti
         currentRoute: action.name,
       };
     case POP:
-      const num = isNumeric(action.data) ? action.data : 1;
+      let num = isNumeric(action.data) ? action.data : 1;
       if (state.routes.length <= num) {
-        throw new Error("Number of routes should be greater than pop() param: " + num);
+        num = state.routes.length - 1;
       }
       return {
         mode: POP,
