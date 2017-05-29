@@ -248,9 +248,15 @@ class Router extends Component {
     if (page.mode === POP) {
       const routes = this.refs.nav.getCurrentRoutes();
       const num = page.num || (routes.length - page.routes.length);
-      // pop only existing routes!
-      if (num < routes.length) {
-        this.refs.nav.popToRoute(routes[routes.length - 1 - num]);
+      const routeNumber = routes.length - 1 - num;
+      const navigatorRoute = routes.find((r) => r.name === this.props.routes[routeNumber]);
+
+      if (this.props.routes[routeNumber] && !navigatorRoute) {
+        this.refs.nav.resetTo(this.getRoute(route, page.data));
+      } else if (navigatorRoute) {
+        this.refs.nav.popToRoute(navigatorRoute);
+      } else {
+        this.refs.nav.resetTo(this.getRoute(this.initialRoute));
       }
     }
 
