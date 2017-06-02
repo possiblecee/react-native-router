@@ -58,7 +58,7 @@ export default function reducer(state = { routes: [], currentRoute: null }, acti
       return {
         mode: RESET,
         data: action.data || null,
-        routes: [state.currentRoute, action.name],
+        routes: [...state.routes, action.name],
         initial: action.name,
         currentRoute: action.name,
       };

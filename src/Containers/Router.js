@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, StatusBar, Navigator } from 'react-native';
+import { View, StatusBar, Navigator, BackAndroid, Platform } from 'react-native';
 import { PUSH, REPLACE, POP, DISMISS, RESET, CoreActions, closeOverlay } from '../Redux/actions';
 import Animations from '../Utils/Animations';
 import { connect } from 'react-redux';
@@ -178,6 +178,10 @@ class Router extends Component {
       console.error('[react-native-router] no initial route defined <Router initialPath="/">');
     }
 
+    if (this.props.useBackButton && Platform.OS === 'android') {
+      this.bindEvents();
+    }
+
     this.props.init(this.initialRoute.name);
   }
 
@@ -185,6 +189,10 @@ class Router extends Component {
     if (props.currentRoute !== this.props.currentRoute) {
       this.onChange(props);
     }
+  }
+
+  componentWillUnmount() {
+    this.removeEvents();
   }
 
   onChange(page) {
@@ -307,6 +315,23 @@ class Router extends Component {
     </View>
   );
 
+  bindEvents() {
+    BackAndroid.addEventListener('hardwareBackPress', this.handleBackButtonPress);
+  }
+
+  removeEvents() {
+    BackAndroid.removeEventListener('hardwareBackPress', this.handleBackButtonPress);
+  }
+
+  handleBackButtonPress = () => {
+    if (this.props.routes.length > 1) {
+      this.props.navigateBack();
+      return true;
+    }
+
+    return !this.props.shouldAppCloseOnBack;
+  }
+
   modals = {};
 
   createModal(page, route) {
@@ -410,6 +435,8 @@ class Router extends Component {
 
 Router.defaultProps = {
   defaultStatusBar: {},
+  useBackButton: true,
+  shouldAppCloseOnBack: true,
   navigationBar: () => null,
 };
 Router.propTypes = {
@@ -422,10 +449,14 @@ Router.propTypes = {
   routes: React.PropTypes.array,
   closeOverlay: React.PropTypes.func,
   rootRef: React.PropTypes.func,
+  navigateBack: React.PropTypes.func,
+  useBackButton: React.PropTypes.bool,
+  shouldAppCloseOnBack: React.PropTypes.bool,
 };
 
 const mapDispatchToProps = (dispatch) => ({
   init: (props) => dispatch(CoreActions.init(props)),
+  navigateBack: () => dispatch(CoreActions.pop()),
   closeOverlay: (props) => dispatch(closeOverlay(props)),
 });
 
