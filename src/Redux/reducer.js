@@ -12,6 +12,10 @@ export default function reducer(state = { routes: [], currentRoute: null }, acti
         currentRoute: action.initial,
       };
     case PUSH:
+      if (state.routes.slice(-1)[0] === action.name) {
+        return state;
+      }
+
       return {
         data: action.data || null,
         mode: PUSH,
@@ -19,6 +23,9 @@ export default function reducer(state = { routes: [], currentRoute: null }, acti
         currentRoute: action.name,
       };
     case REPLACE:
+      if (state.routes.slice(-1)[0] === action.name) {
+        return state;
+      }
       return {
         data: action.data || null,
         mode: REPLACE,
@@ -55,6 +62,9 @@ export default function reducer(state = { routes: [], currentRoute: null }, acti
       };
 
     case RESET:
+      if (state.routes.slice(-1)[0] === action.name) {
+        return state;
+      }
       return {
         mode: RESET,
         data: action.data || null,
