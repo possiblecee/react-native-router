@@ -105,14 +105,21 @@ class ModalContainer extends Component {
 
   render() {
     return (
-      <View style={s.root} key={`container-${this.props.name}`}>
+      <View style={s.root} key={`container-${this.props.name}`} pointerEvents="box-none">
         <Animated.View
           key={`root-${this.props.name}`}
+          pointerEvents="box-none"
           style={[s.wrapper, getAnimatedValue(this.props.transition, this.state.animation)]}
         >
-          <View style={[s.container, { justifyContent: this.props.justifyContent }]}>
+          <View
+            pointerEvents="box-none"
+            style={[s.container, { justifyContent: this.props.justifyContent }]}
+          >
             {this.getBackgorundComponent()}
-            <View style={[s.innerContainer, this.props.style]}>
+            <View
+              pointerEvents="box-none"
+              style={[s.innerContainer, this.props.style]}
+            >
               {this.props.children}
             </View>
           </View>

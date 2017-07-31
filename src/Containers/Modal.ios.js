@@ -119,6 +119,7 @@ class ModalContainer extends Component {
     return (
       <View style={s.root}
         key={`container-${this.props.name}`}
+        pointerEvents="box-none"
         onLayout={() => {
           if (!this.visible && this.props.transition === SLIDE) {
             this.visible = true;
@@ -128,11 +129,18 @@ class ModalContainer extends Component {
       >
         <View
           key={`root-${this.props.name}`}
+          pointerEvents="box-none"
           style={[s.wrapper, getAnimatedValue(this.props.transition, this.state.animation)]}
         >
           {this.getBackgorundComponent()}
-          <View style={[s.container, { justifyContent: this.props.justifyContent }]}>
-            <View style={[s.innerContainer, this.props.style]}>
+          <View
+            pointerEvents="box-none"
+            style={[s.container, { justifyContent: this.props.justifyContent }]}
+          >
+            <View
+              pointerEvents="box-none"
+              style={[s.innerContainer, this.props.style]}
+            >
               {this.props.children}
             </View>
           </View>
