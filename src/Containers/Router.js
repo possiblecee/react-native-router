@@ -195,6 +195,8 @@ class Router extends Component {
     this.removeEvents();
   }
 
+  modalAnimation = Promise.resolve();
+
   onChange(page) {
     const route = this.findRoute(page.currentRoute);
 
@@ -205,8 +207,11 @@ class Router extends Component {
     }
 
     // check if route is popup
+
     if (route.type === 'modal' && page.mode !== DISMISS) {
-      this.createModal(page, route);
+      this.modalAnimation.then(() => {
+        this.createModal(page, route);
+      });
       return;
     } else if (page.mode === DISMISS) {
       const routes = this.state.modals.map((m) => m.name);
@@ -218,7 +223,7 @@ class Router extends Component {
         }
       }).filter((m) => m);
 
-      Promise.all(diff.map((m) => {
+      this.modalAnimation = Promise.all(diff.map((m) => {
         if (this.modals[m]) {
           return this.modals[m].animate(false);
         }
@@ -414,11 +419,11 @@ class Router extends Component {
           />
         </View>
         {!!this.state.modals.length && (
-          this.state.modals.map((modal) => (
+          this.state.modals.map((modal, i) => (
             <ModalContainer
               ref={(e) => { this.modals[modal.name] = e; }}
               {...modal}
-              key={modal.name}
+              key={`${modal.name}-${i}`}
               children={
                 React.Children.toArray([
                   recursiveRender(modal)(modal.passProps),
