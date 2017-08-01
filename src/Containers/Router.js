@@ -406,9 +406,9 @@ class Router extends Component {
 
   render() {
     return (
-      <View style={s.transparent}>
+      <View style={s.transparent} ref={this.props.rootRef}>
         <StatusBar {...this.props.defaultStatusBar} />
-        <View style={s.transparent} ref={this.props.rootRef}>
+        <View style={s.transparent}>
           <Navigator
             renderScene={(route) => (
               this.getSchene(route)
