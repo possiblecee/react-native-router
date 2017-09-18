@@ -214,22 +214,22 @@ class Router extends Component {
       });
       return;
     } else if (page.mode === DISMISS) {
-      const routes = this.state.modals.map((m) => m.name);
       const diff = difference(this.props.routes, page.routes);
-
-      const modals = routes.map((r, i) => {
-        if (diff.indexOf(r) === -1) {
-          return this.state.modals[i];
-        }
-      }).filter((m) => m);
-
       this.modalAnimation.then(() => {
+        const routes = this.state.modals.map((m) => m.name);
+
+        const modals = routes.map((r, i) => {
+          if (diff.indexOf(r) === -1) {
+            return this.state.modals[i];
+          }
+        }).filter((m) => m);
+
         this.modalAnimation = Promise.all(diff.map((m) => {
           if (this.modals[m]) {
             return this.modals[m].animate(false);
           }
           return Promise.resolve();
-        })).then(() => this.setState({ modals }));
+        })).then(() => new Promise((resolve) => this.setState({ modals }, resolve)));
       });
     } else if (route.type !== 'modal' && this.state.modals.length) {
       if (page.mode === POP) {
