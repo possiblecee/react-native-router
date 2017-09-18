@@ -223,12 +223,14 @@ class Router extends Component {
         }
       }).filter((m) => m);
 
-      this.modalAnimation = Promise.all(diff.map((m) => {
-        if (this.modals[m]) {
-          return this.modals[m].animate(false);
-        }
-        return Promise.resolve();
-      })).then(() => this.setState({ modals }));
+      this.modalAnimation.then(() => {
+        this.modalAnimation = Promise.all(diff.map((m) => {
+          if (this.modals[m]) {
+            return this.modals[m].animate(false);
+          }
+          return Promise.resolve();
+        })).then(() => this.setState({ modals }));
+      });
     } else if (route.type !== 'modal' && this.state.modals.length) {
       if (page.mode === POP) {
         const modals = this.state.modals;
