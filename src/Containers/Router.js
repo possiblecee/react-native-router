@@ -354,14 +354,14 @@ class Router extends Component {
         ...route,
         ...page.data,
         paddingTop: get(route.params, 'navigationBar.height', 0),
-        close: () => this.props.closeOverlay(route.name),
+        close: () => this.props.closeOverlay(page.currentRoute),
       },
       transition: (
         isReset ? Animations.Modal.None :
         get(parent, 'passProps.transition', Animations.Modal.None)
       ),
       navigationBar: get(route.params, 'navigationBar', () => ({}))(route),
-      name: route.name,
+      name: page.currentRoute,
       parent,
     };
 
