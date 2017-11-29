@@ -88,6 +88,12 @@ class ModalContainer extends Component {
     }
   }
 
+  componentWillUnmount() {
+    setTimeout(() => {
+      LayoutAnimation.configureNext();
+    }, 300);
+  }
+
   getBackgorundComponent() {
     const backgroundComponent =
     get(this.props, 'params.backgroundComponent', get(this.props, 'backgroundComponent'));
