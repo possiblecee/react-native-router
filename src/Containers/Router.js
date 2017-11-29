@@ -163,7 +163,10 @@ class Router extends Component {
     modals: [],
   };
 
+  navigatePromise = Promise.resolve();
+
   componentWillMount() {
+    this.setNavigatePromise();
     const {
       routes,
       parents,
@@ -196,6 +199,17 @@ class Router extends Component {
   }
 
   modalAnimation = Promise.resolve();
+  navigatePromise = Promise.resolve();
+
+  setNavigatePromise = () => {
+    this.navigatePromise = new Promise((resolve) => {
+      const timeout = setTimeout(resolve, 1000);
+      this.navigatePromiseResolve = () => {
+        clearTimeout(timeout);
+        resolve();
+      };
+    });
+  }
 
   onChange(page) {
     const route = this.findRoute(page.currentRoute);
@@ -252,35 +266,40 @@ class Router extends Component {
       });
     }
 
-    if (page.mode === PUSH || page.mode === REPLACE) {
-      if (page.mode === REPLACE) {
-        this.refs.nav.replace(this.getRoute(route, page.data));
-      } else {
-        this.refs.nav.push(this.getRoute(route, page.data));
+    this.navigatePromise.then(() => {
+      this.setNavigatePromise();
+
+      if (page.mode === PUSH || page.mode === REPLACE) {
+        if (page.mode === REPLACE) {
+          this.refs.nav.replace(this.getRoute(route, page.data));
+        } else {
+          this.refs.nav.push(this.getRoute(route, page.data));
+        }
+
       }
-    }
 
-    if (page.mode === POP) {
-      const routes = this.refs.nav.getCurrentRoutes();
-      const num = page.num || (routes.length - page.routes.length);
-      const routeNumber = routes.length - 1 - num;
-      const navigatorRoute = routes.find((r) => r.name === this.props.routes[routeNumber]);
+      if (page.mode === POP) {
+        const routes = this.refs.nav.getCurrentRoutes();
+        const num = page.num || (routes.length - page.routes.length);
+        const routeNumber = routes.length - 1 - num;
+        const navigatorRoute = routes.find((r) => r.name === this.props.routes[routeNumber]);
 
-      if (this.props.routes[routeNumber] && !navigatorRoute) {
-        this.refs.nav.resetTo(this.getRoute(route, page.data));
-      } else if (navigatorRoute) {
-        this.refs.nav.popToRoute(navigatorRoute);
-      } else {
-        this.refs.nav.resetTo(this.getRoute(this.initialRoute));
+        if (this.props.routes[routeNumber] && !navigatorRoute) {
+          this.refs.nav.resetTo(this.getRoute(route, page.data));
+        } else if (navigatorRoute) {
+          this.refs.nav.popToRoute(navigatorRoute);
+        } else {
+          this.refs.nav.resetTo(this.getRoute(this.initialRoute));
+        }
       }
-    }
 
-    if (page.mode === RESET) {
-      // reset navigation stack
-      this.refs.nav.immediatelyResetRouteStack([
-        this.getRoute(route, page.data),
-      ]);
-    }
+      if (page.mode === RESET) {
+        // reset navigation stack
+        this.refs.nav.immediatelyResetRouteStack([
+          this.getRoute(route, page.data),
+        ]);
+      }
+    });
   }
 
   getRoute = (route, data) => {
@@ -412,6 +431,7 @@ class Router extends Component {
         <StatusBar {...this.props.defaultStatusBar} />
         <View style={s.transparent}>
           <Navigator
+            onDidFocus={this.navigatePromiseResolve}
             renderScene={(route) => (
               this.getSchene(route)
             )}
