@@ -267,18 +267,19 @@ class Router extends Component {
     }
 
     this.navigatePromise.then(() => {
-      this.setNavigatePromise();
 
       if (page.mode === PUSH || page.mode === REPLACE) {
         if (page.mode === REPLACE) {
           this.refs.nav.replace(this.getRoute(route, page.data));
         } else {
+          this.setNavigatePromise();
           this.refs.nav.push(this.getRoute(route, page.data));
         }
 
       }
 
       if (page.mode === POP) {
+        this.setNavigatePromise();
         const routes = this.refs.nav.getCurrentRoutes();
         const num = page.num || (routes.length - page.routes.length);
         const routeNumber = routes.length - 1 - num;
