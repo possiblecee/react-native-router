@@ -190,7 +190,7 @@ class Router extends Component {
 
   componentWillReceiveProps(props) {
     if (props.currentRoute !== this.props.currentRoute) {
-      this.onChange({ ...props }, { ...this.props });
+      this.onChange({ ...props });
     }
   }
 
@@ -218,7 +218,7 @@ class Router extends Component {
     })
   }
 
-  onChange(page, props) {
+  onChange(page) {
     const route = this.findRoute(page.currentRoute);
 
     if (!route) {
@@ -289,11 +289,11 @@ class Router extends Component {
 
       if (page.mode === POP) {
         const routes = this.refs.nav.getCurrentRoutes();
-        const num = page.num || (routes.length - props.routes.length);
+        const num = page.num || (routes.length - page.routes.length);
         const routeNumber = routes.length - 1 - num;
-        const navigatorRoute = routes.find((r) => r.name === props.routes[routeNumber]);
+        const navigatorRoute = routes.find((r) => r.name === page.routes[routeNumber]);
 
-        if (props.routes[routeNumber] && !navigatorRoute) {
+        if (page.routes[routeNumber] && !navigatorRoute) {
           this.syncNavigationActions(() => {
             this.refs.nav.resetTo(this.getRoute(route, page.data));
           });
