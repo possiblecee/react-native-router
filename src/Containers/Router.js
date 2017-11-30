@@ -282,7 +282,6 @@ class Router extends Component {
         } else {
           this.syncNavigationActions(() => {
             this.refs.nav.push(this.getRoute(route, page.data));
-            console.log(this.refs.nav.getCurrentRoutes());
           });
         }
 
