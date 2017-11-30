@@ -190,7 +190,7 @@ class Router extends Component {
 
   componentWillReceiveProps(props) {
     if (props.currentRoute !== this.props.currentRoute) {
-      this.onChange(props);
+      this.onChange({ ...props });
     }
   }
 
@@ -209,6 +209,13 @@ class Router extends Component {
         resolve();
       };
     });
+  }
+
+  syncNavigationActions = (cb) => {
+    this.navigatePromise.then(() => {
+      this.setNavigatePromise();
+      cb();
+    })
   }
 
   onChange(page) {
@@ -267,30 +274,38 @@ class Router extends Component {
     }
 
     this.navigatePromise.then(() => {
-
       if (page.mode === PUSH || page.mode === REPLACE) {
         if (page.mode === REPLACE) {
-          this.refs.nav.replace(this.getRoute(route, page.data));
+          this.syncNavigationActions(() => {
+            this.refs.nav.replace(this.getRoute(route, page.data));
+          });
         } else {
-          this.setNavigatePromise();
-          this.refs.nav.push(this.getRoute(route, page.data));
+          this.syncNavigationActions(() => {
+            this.refs.nav.push(this.getRoute(route, page.data));
+            console.log(this.refs.nav.getCurrentRoutes());
+          });
         }
 
       }
 
       if (page.mode === POP) {
-        this.setNavigatePromise();
         const routes = this.refs.nav.getCurrentRoutes();
         const num = page.num || (routes.length - page.routes.length);
         const routeNumber = routes.length - 1 - num;
-        const navigatorRoute = routes.find((r) => r.name === this.props.routes[routeNumber]);
+        const navigatorRoute = routes.find((r) => r.name === page.routes[routeNumber]);
 
         if (this.props.routes[routeNumber] && !navigatorRoute) {
-          this.refs.nav.resetTo(this.getRoute(route, page.data));
+          this.syncNavigationActions(() => {
+            this.refs.nav.resetTo(this.getRoute(route, page.data));
+          });
         } else if (navigatorRoute) {
-          this.refs.nav.popToRoute(navigatorRoute);
+          this.syncNavigationActions(() => {
+            this.refs.nav.popToRoute(navigatorRoute);
+          });
         } else {
-          this.refs.nav.resetTo(this.getRoute(this.initialRoute));
+          this.syncNavigationActions(() => {
+            this.refs.nav.resetTo(this.getRoute(this.initialRoute));
+          });
         }
       }
 
