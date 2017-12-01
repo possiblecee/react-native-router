@@ -289,23 +289,18 @@ class Router extends Component {
 
       if (page.mode === POP) {
         const routes = this.refs.nav.getCurrentRoutes();
-        const num = page.num || (routes.length - page.routes.length);
-        const routeNumber = routes.length - 1 - num;
-        const navigatorRoute = routes.find((r) => r.name === page.routes[routeNumber]);
+        const targetRoute = [...page.routes].pop();
+        const navigatorRoute = routes.find((r) => r.name === targetRoute);
 
-        if (page.routes[routeNumber] && !navigatorRoute) {
-          this.syncNavigationActions(() => {
-            this.refs.nav.resetTo(this.getRoute(route, page.data));
-          });
-        } else if (navigatorRoute) {
-          this.syncNavigationActions(() => {
+        if (navigatorRoute) {
+          return this.syncNavigationActions(() => {
             this.refs.nav.popToRoute(navigatorRoute);
           });
-        } else {
-          this.syncNavigationActions(() => {
-            this.refs.nav.resetTo(this.getRoute(this.initialRoute));
-          });
         }
+
+        return this.syncNavigationActions(() => {
+          this.refs.nav.resetTo(this.getRoute(this.initialRoute));
+        });
       }
 
       if (page.mode === RESET) {
