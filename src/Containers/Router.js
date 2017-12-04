@@ -290,7 +290,11 @@ class Router extends Component {
       if (page.mode === POP) {
         const routes = this.refs.nav.getCurrentRoutes();
         const targetRoute = [...page.routes].pop();
-        const navigatorRoute = routes.find((r) => r.name === targetRoute);
+        let navigatorRoute = routes.find((r) => r.name === targetRoute);
+
+        if (!navigatorRoute) {
+          navigatorRoute = routes.find((r) => pathToRegexp(r.name).test(targetRoute));
+        }
 
         if (navigatorRoute) {
           return this.syncNavigationActions(() => {
@@ -299,7 +303,7 @@ class Router extends Component {
         }
 
         return this.syncNavigationActions(() => {
-          this.refs.nav.resetTo(this.getRoute(this.initialRoute));
+          this.props.resetTo(this.initialRoute.name);
         });
       }
 
@@ -445,7 +449,7 @@ class Router extends Component {
             renderScene={(route) => (
               this.getSchene(route)
             )}
-            configureScene={(route) => route.sceneConfig}
+            configureScene={(route) => ({ ...route.sceneConfig, gestures: {} })}
             ref="nav"
             initialRoute={this.getRoute(this.initialRoute)}
           />
@@ -489,11 +493,13 @@ Router.propTypes = {
   navigateBack: React.PropTypes.func,
   useBackButton: React.PropTypes.bool,
   shouldAppCloseOnBack: React.PropTypes.bool,
+  resetTo: React.PropTypes.func,
 };
 
 const mapDispatchToProps = (dispatch) => ({
   init: (props) => dispatch(CoreActions.init(props)),
   navigateBack: () => dispatch(CoreActions.pop()),
+  resetTo: (name) => dispatch(CoreActions.reset({ name })),
   closeOverlay: (props) => dispatch(closeOverlay(props)),
 });
 
