@@ -328,7 +328,7 @@ class Router extends Component {
     const sceneConfig = get(route, 'params.transition') || parent.transition
     || Animations.FlatFloatFromRight;
     const props = { ...route, ...data };
-
+    
     return {
       name: route.name,
       component: route.component,
@@ -339,11 +339,12 @@ class Router extends Component {
       navigationBar: get(props.params, 'navigationBar', () => ({}))(props),
       parent,
       passProps: props,
+      ContainerElement: (route.params || {}).rootContainerElement || View,
     };
   }
 
-  getSchene = (route) => (
-    <View style={s.transparent}>
+  getSchene = ({ ContainerElement, ...route }) => (
+    <ContainerElement style={s.transparent}>
       {recursiveRender(route)({
         key: route.name,
         route,
@@ -352,7 +353,7 @@ class Router extends Component {
         routes: this.routerActions,
       })}
       {this.props.navigationBar(route)}
-    </View>
+    </ContainerElement>
   );
 
   bindEvents() {
