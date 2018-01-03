@@ -55,10 +55,12 @@ export default function reducer(state = { routes: [], currentRoute: null }, acti
         };
       }
 
+      const routes = [...state.routes.filter((r) => r !== action.name)];
+
       return {
         mode: DISMISS,
-        routes: [...state.routes.filter((r) => r !== action.name)],
-        currentRoute: state.routes[state.routes.length - 2],
+        routes,
+        currentRoute: [...routes].pop(),
       };
 
     case RESET:
