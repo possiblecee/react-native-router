@@ -189,7 +189,10 @@ class Router extends Component {
   }
 
   componentWillReceiveProps(props) {
-    if (props.currentRoute !== this.props.currentRoute) {
+    if (
+      props.currentRoute !== this.props.currentRoute 
+      || this.props.routes.length !== props.routes.length
+    ) {
       this.onChange({ ...props });
     }
   }
@@ -235,7 +238,8 @@ class Router extends Component {
       });
       return;
     } else if (page.mode === DISMISS) {
-      const diff = difference(this.props.routes, page.routes);
+      const diff = difference(this.props.routes, page.routes)
+      .reduce((occ, route) => ([...occ, route.path]), []);
       this.modalAnimation.then(() => {
         const routes = this.state.modals.map((m) => m.name);
 
@@ -289,7 +293,7 @@ class Router extends Component {
 
       if (page.mode === POP) {
         const routes = this.refs.nav.getCurrentRoutes();
-        const targetRoute = [...page.routes].pop();
+        const targetRoute = ([...page.routes].pop() || {}).path;
         let navigatorRoute = routes.find((r) => r.name === targetRoute);
 
         if (!navigatorRoute) {
@@ -328,7 +332,7 @@ class Router extends Component {
     const sceneConfig = get(route, 'params.transition') || parent.transition
     || Animations.FlatFloatFromRight;
     const props = { ...route, ...data };
-    
+
     return {
       name: route.name,
       component: route.component,
