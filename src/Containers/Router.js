@@ -195,6 +195,10 @@ class Router extends Component {
     ) {
       this.onChange({ ...props });
     }
+
+    if (this.props.initialPath !== props.initialPath) {
+      this.initialRoute = this.findRoute(this.props.initialPath);
+    }
   }
 
   componentWillUnmount() {
