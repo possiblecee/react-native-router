@@ -190,14 +190,14 @@ class Router extends Component {
 
   componentWillReceiveProps(props) {
     if (
-      props.currentRoute !== this.props.currentRoute 
+      props.currentRoute !== this.props.currentRoute
       || this.props.routes.length !== props.routes.length
     ) {
       this.onChange({ ...props });
     }
 
     if (this.props.initialPath !== props.initialPath) {
-      this.initialRoute = this.findRoute(this.props.initialPath);
+      this.initialRoute = this.findRoute(props.initialPath);
     }
   }
 
@@ -308,6 +308,12 @@ class Router extends Component {
           return this.syncNavigationActions(() => {
             this.refs.nav.popToRoute(navigatorRoute);
           });
+        }
+
+        if (this.initialRoute.name === this.props.currentRoute) {
+          return this.refs.nav.immediatelyResetRouteStack([
+            this.getRoute(route, page.data),
+          ]);
         }
 
         return this.syncNavigationActions(() => {
