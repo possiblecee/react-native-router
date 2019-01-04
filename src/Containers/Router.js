@@ -9,6 +9,8 @@ import { ModalContainer } from './Modal';
 
 let paretnCounter = 0;
 
+const IS_ANDROID = Platform.OS === 'android';
+
 const s = {
   container: {
     position: 'absolute',
@@ -161,6 +163,7 @@ const recursiveRender = ({ parent = {}, component, passProps }) => (props) => {
 class Router extends Component {
   state = {
     modals: [],
+    androidBackPressed: false,
   };
 
   navigatePromise = Promise.resolve();
@@ -181,7 +184,7 @@ class Router extends Component {
       console.error('[react-native-router] no initial route defined <Router initialPath="/">');
     }
 
-    if (this.props.useBackButton && Platform.OS === 'android') {
+    if (this.props.useBackButton && IS_ANDROID) {
       this.bindEvents();
     }
 
@@ -225,6 +228,28 @@ class Router extends Component {
     })
   }
 
+  setModalAnimation(page) {
+    const diff = difference(this.props.routes, page.routes)
+    .reduce((occ, route) => ([...occ, route.path]), []);
+
+    this.modalAnimation.then(() => {
+      const routes = this.state.modals.map((m) => m.name);
+
+      const modals = routes.map((r, i) => {
+        if (diff.indexOf(r) === -1) {
+          return this.state.modals[i];
+        }
+      }).filter((m) => m);
+
+      this.modalAnimation = Promise.all(diff.map((m) => {
+        if (this.modals[m]) {
+          return this.modals[m].animate(false);
+        }
+        return Promise.resolve();
+      })).then(() => new Promise((resolve) => this.setState({ modals, androidBackPressed: false }, resolve)));
+    });
+  }
+
   onChange(page) {
     const route = this.findRoute(page.currentRoute);
 
@@ -234,36 +259,24 @@ class Router extends Component {
       return;
     }
 
-    // check if route is popup
+    // special case for android back button press with multiple modals open
+    if (IS_ANDROID && this.state.androidBackPressed
+      && route.type === 'modal' && this.state.modals.length) {
+      this.setModalAnimation(page);
+    }
 
+    // check if route is popup
     if (route.type === 'modal' && page.mode !== DISMISS) {
       this.modalAnimation.then(() => {
         this.createModal(page, route);
       });
       return;
     } else if (page.mode === DISMISS) {
-      const diff = difference(this.props.routes, page.routes)
-      .reduce((occ, route) => ([...occ, route.path]), []);
-      this.modalAnimation.then(() => {
-        const routes = this.state.modals.map((m) => m.name);
-
-        const modals = routes.map((r, i) => {
-          if (diff.indexOf(r) === -1) {
-            return this.state.modals[i];
-          }
-        }).filter((m) => m);
-
-        this.modalAnimation = Promise.all(diff.map((m) => {
-          if (this.modals[m]) {
-            return this.modals[m].animate(false);
-          }
-          return Promise.resolve();
-        })).then(() => new Promise((resolve) => this.setState({ modals }, resolve)));
-      });
+      this.setModalAnimation(page);
     } else if (route.type !== 'modal' && this.state.modals.length) {
       if (page.mode === POP) {
         const modals = this.state.modals;
-
+        console.log({ modals })
         if (modals.length > 1) {
           modals.splice(-1, 1);
         } else {
@@ -379,8 +392,10 @@ class Router extends Component {
   }
 
   handleBackButtonPress = () => {
+    console.log({ 'this.props.routes': this.props.routes });
+
     if (this.props.routes.length > 1) {
-      this.props.navigateBack();
+      this.setState({ androidBackPressed: true }, this.props.navigateBack);
       return true;
     }
 
