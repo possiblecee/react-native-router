@@ -276,7 +276,7 @@ class Router extends Component {
     } else if (route.type !== 'modal' && this.state.modals.length) {
       if (page.mode === POP) {
         const modals = this.state.modals;
-        console.log({ modals })
+        
         if (modals.length > 1) {
           modals.splice(-1, 1);
         } else {
